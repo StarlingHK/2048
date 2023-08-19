@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2048 Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        #grid-container {
+            display: grid;
+            grid-template-columns: repeat(4, 100px);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .tile {
+            width: 100px;
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            background-color: #ccc;
+            border-radius: 10px;
+            transition: transform 0.2s;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-100px);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateY(0);
+            }
+            to {
+                transform: translateY(100px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>2048 Game</h1>
+        <div id="grid-container"></div>
+    </div>
+    <script>
+        const gridContainer = document.getElementById("grid-container");
+
+        const Direction = {
+            UP: "up",
+            DOWN: "down",
+            LEFT: "left",
+            RIGHT: "right"
+        };
+
+        let grid = new Array(4).fill(null).map(() => new Array(4).fill(0));
+
+        function addRandomTile() {
+            const emptyCells = [];
+            for (let row = 0; row < 4; row++) {
+                for (let col = 0; col < 4; col++) {
+                    if (grid[row][col] === 0) {
+                        emptyCells.push({ row, col });
+                    }
+                }
+            }
+
+            if (emptyCells.length > 0) {
+                const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+                grid[randomCell.row][randomCell.col] = Math.random() < 0.9 ? 2 : 4;
+            }
+        }
+
+        function updateUI() {
+            gridContainer.innerHTML = "";
+            for (let row = 0; row < 4; row++) {
+                for (let col = 0; col < 4; col++) {
+                    const tile = document.createElement("div");
+                    tile.className = "tile";
+                    tile.textContent = grid[row][col] !== 0 ? grid[row][col] : "";
+                    tile.dataset.row = row;
+                    tile.dataset.col = col;
+                    gridContainer.appendChild(tile);
+                }
+            }
+        }
+
+        function moveTilesLeft() {
+            let hasMoved = false;
+
+            for (let row = 0; row < 4; row++) {
+                for (let col = 1; col < 4; col++) {
+                    if (grid[row][col] !== 0) {
+                        let targetCol = col;
+
+                        while (targetCol > 0 && grid[row][targetCol - 1] === 0) {
+                            targetCol--;
+                        }
+
+                        if (targetCol > 0 && grid[row][targetCol - 1] === grid[row][col]) {
+                            grid[row][targetCol - 1] *= 2;
+                            grid[row][col] = 0;
+                            hasMoved = true;
+                        } else if (targetCol !== col) {
+                            const tile = document.querySelector(`.tile[data-row="${row}"][data-col="${col}"]`);
+                            tile.classList.add('slide-out');
+
+                            grid[row][targetCol] = grid[row][col];
+                            grid[row][col] = 0;
+                            hasMoved = true;
+                        }
+                    }
+                }
+            }
+
+            if (hasMoved) {
+                addRandomTile();
+                updateUI();
+                // Check for game over here
+                const movedTiles = document.querySelectorAll('.tile.slide-out');
+                movedTiles.forEach(tile => {
+                    animateTileSlide(tile, 'in');
+                });
+            }
+        }
+
+        function moveTilesRight() {
+            let hasMoved = false;
+
+            for (let row = 0; row < 4; row++) {
+                for (let col = 2; col >= 0; col--) {
+                    if (grid[row][col] !== 0) {
+                        let targetCol = col;
+
+                        while (targetCol < 3 && grid[row][targetCol + 1] === 0) {
+                            targetCol++;
+                        }
+
+                        if (targetCol < 3 && grid[row][targetCol + 1] === grid[row][col]) {
+                            grid[row][targetCol + 1] *= 2;
+                            grid[row][col] = 0;
+                            hasMoved = true;
+                        } else if (targetCol !== col) {
+                            const tile = document.querySelector(`.tile[data-row="${row}"][data-col="${col}"]`);
+                            tile.classList.add('slide-out');
+
+                            grid[row][targetCol] = grid[row][col];
+                            grid[row][col] = 0;
+                            hasMoved = true;
+                        }
+                    }
+                }
+            }
+
+            if (hasMoved) {
+                addRandomTile();
+                updateUI();
+                // Check for game over here
+                const movedTiles = document.querySelectorAll('.tile.slide-out');
+                movedTiles.forEach(tile => {
+                    animateTileSlide(tile, 'in');
+                });
+            }
+        }
+
+        function moveTilesUp() {
+            let hasMoved = false;
+
+            for (let col = 0; col < 4; col++) {
+                for (let row = 1; row < 4; row++) {
+                    if (grid[row][col] !== 0) {
+                        let targetRow = row;
+
+                        while (targetRow > 0 && grid[targetRow - 1][col] === 0) {
+                            targetRow--;
+                        }
+
+                        if (targetRow > 0 && grid[targetRow - 1][col] === grid[row][col]) {
+                            grid[targetRow - 1][col] *= 2;
+                            grid[row][col] = 0;
+                            hasMoved = true;
+                        } else if (targetRow !== row) {
+                            const tile = document.querySelector(`.tile[data-row="${row}"][data-col="${col}"]`);
+                            tile.classList.add('slide-out');
+
+                            grid[targetRow][col] = grid[row][col];
+                            grid[row][col] = 0;
+                            hasMoved = true;
+                        }
+                    }
+                }
+            }
+
+            if (hasMoved) {
+                addRandomTile();
+                updateUI();
+                // Check for game over here
+                const movedTiles = document.querySelectorAll('.tile.slide-out');
+                movedTiles.forEach(tile => {
+                    animateTileSlide(tile, 'in');
+                });
+            }
+        }
+
+        function animateTileSlide(tile, direction) {
+            tile.style.animation = direction === 'in' ? 'slideIn 0.2s' : 'slideOut 0.2s';
+            tile.addEventListener('animationend', () => {
+                tile.style.animation = '';
+            }, { once: true });
+        }
+
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "ArrowUp") {
+                moveTilesUp();
+            } else if (event.key === "ArrowDown") {
+                // Implement moveTilesDown function here
+            } else if (event.key === "ArrowLeft") {
+                moveTilesLeft();
+            } else if (event.key === "ArrowRight") {
+                moveTilesRight();
+            }
+        });
+
+        function startGame() {
+            addRandomTile();
+            addRandomTile();
+            updateUI();
+        }
+
+        startGame();
+    </script>
+</body>
+</html>
